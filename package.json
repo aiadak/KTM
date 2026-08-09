@@ -1,0 +1,18 @@
+{
+  "name": "sme-knowledge-workbench",
+  "version": "1.0.0",
+  "description": "SME Knowledge Workbench — upload-driven knowledge retention demo. Static HTML + Vercel serverless + Anthropic API.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "xlsx": "0.18.5"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

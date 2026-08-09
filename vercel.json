@@ -1,0 +1,40 @@
+{
+  "functions": {
+    "api/archivist.js": {
+      "maxDuration": 60
+    },
+    "api/extract.js": {
+      "maxDuration": 60
+    },
+    "api/graph.js": {
+      "maxDuration": 60
+    },
+    "api/playbook.js": {
+      "maxDuration": 60
+    },
+    "api/coach.js": {
+      "maxDuration": 60
+    },
+    "api/interview-planner.js": {
+      "maxDuration": 60
+    },
+    "api/automation.js": {
+      "maxDuration": 60
+    },
+    "api/reprompt.js": {
+      "maxDuration": 60
+    },
+    "api/jira.js": {
+      "maxDuration": 60
+    },
+    "api/xlsx-lib.js": {
+      "maxDuration": 30,
+      "includeFiles": "node_modules/xlsx/dist/**"
+    },
+    "api/template.js": {
+      "maxDuration": 30,
+      "includeFiles": "node_modules/xlsx/dist/**"
+    }
+  },
+  "cleanUrls": true
+}

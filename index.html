@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>USRM Knowledge Transition Workbench</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #0f172a;
+    --paper: #f6f7f9;
+    --accent: #0f766e;
+    --accent-ink: #115e59;
+    --accent-tint: rgba(15,118,110,.14);
+  }
+  html, body { font-family: 'Inter', system-ui, sans-serif; background: var(--paper); color: var(--ink); }
+  .font-serif { font-family: 'Source Serif 4', Georgia, serif; }
+  .header-bar { background: var(--ink); color: #fff; }
+  .accent { color: var(--accent); }
+  .bg-accent { background: var(--accent); }
+  .border-accent { border-color: var(--accent); }
+  .agent-card { transition: all .2s ease; cursor: pointer; }
+  .agent-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(15,23,42,.10); border-color: var(--accent); }
+  .agent-card.active { border-color: var(--accent); box-shadow: 0 10px 40px rgba(15,118,110,.16); }
+  .agent-card.active .agent-title { color: var(--accent); }
+  .agent-card.pulse { animation: cardPulse 2s ease-in-out infinite; }
+  @keyframes cardPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(15,118,110,.32); } 50% { box-shadow: 0 0 0 12px rgba(15,118,110,0); } }
+  .agent-card.done { opacity: .62; }
+  .agent-card.done .agent-title::after { content: ' ✓'; color: #16a34a; }
+  .kpi-card { border-left: 4px solid var(--accent); }
+  .pill { display: inline-flex; align-items: center; gap: .35rem; padding: .15rem .55rem; font-size: .7rem; font-weight: 600; border-radius: 999px; letter-spacing: .02em; }
+  .pill-real { background: #d1fae5; color: #065f46; }
+  .pill-mock { background: #e5e7eb; color: #374151; }
+  .pill-auto { background: #e0f2fe; color: #075985; }
+  .pill-hitl { background: #fef3c7; color: #92400e; }
+  .pill-draft { background: #fee2e2; color: #991b1b; }
+  .pill-live { background: #0f766e; color: #fff; }
+  .tab-btn.active { border-color: var(--accent); color: #fff; }
+  .run-btn { animation: runPulse 2.6s ease-in-out infinite; }
+  @keyframes runPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(15,118,110,.45); } 50% { box-shadow: 0 0 0 14px rgba(15,118,110,0); } }
+  .progress-bar { transition: width .45s ease; background: var(--accent); }
+  .mark { width: 34px; height: 34px; }
+  code, pre { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  pre { background: #0f172a; color: #e5e7eb; padding: 1rem; border-radius: 8px; font-size: .78rem; overflow-x: auto; }
+  .agent-icon { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--accent-tint); color: var(--accent); }
+  .scene-panel { animation: slideDown .3s ease; }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .dropzone { border: 2px dashed #cbd5e1; transition: all .18s ease; }
+  .dropzone.hot { border-color: var(--accent); background: var(--accent-tint); }
+  .flash { animation: flash 1.1s ease 2; }
+  @keyframes flash { 0%,100% { box-shadow: 0 0 0 0 rgba(15,118,110,0); } 50% { box-shadow: 0 0 0 10px rgba(15,118,110,.20); } }
+  .spin { display:inline-block; width:12px; height:12px; border:2px solid var(--accent); border-right-color:transparent; border-radius:50%; animation: sp .7s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  table.grid th, table.grid td { border-bottom: 1px solid #e5e7eb; padding: .35rem .5rem; text-align: left; vertical-align: top; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="header-bar">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3 cursor-pointer" id="header-home">
+      <svg class="mark" viewBox="0 0 40 40" fill="none">
+        <circle cx="20" cy="8" r="4.5" fill="#0f766e"/>
+        <circle cx="8" cy="29" r="4.5" fill="#94a3b8"/>
+        <circle cx="32" cy="29" r="4.5" fill="#94a3b8"/>
+        <path d="M20 12.5 L8 24.5 M20 12.5 L32 24.5 M11.5 29 L28.5 29" stroke="#e2e8f0" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="text-[10px] tracking-[.25em] text-gray-400">USRM VALUE STREAM · KNOWLEDGE TRANSITION</div>
+        <div class="font-serif text-2xl leading-tight">Knowledge Transition Workbench</div>
+      </div>
+    </div>
+    <nav class="flex items-center gap-1">
+      <button class="tab-btn active px-4 py-2 border-b-2 border-transparent text-sm font-medium text-white" data-tab="dashboard">Agent Dashboard</button>
+      <button class="tab-btn px-4 py-2 border-b-2 border-transparent text-sm font-medium text-gray-300" data-tab="data">Data</button>
+      <button class="tab-btn px-4 py-2 border-b-2 border-transparent text-sm font-medium text-gray-300" data-tab="map">System Map</button>
+    </nav>
+    <div class="text-xs text-gray-400 whitespace-nowrap" id="header-status">No data loaded</div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+  <section id="tab-dashboard" class="tab-panel">
+
+    <div id="kpi-row" class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6"></div>
+
+    <div id="data-card" class="bg-white rounded-lg shadow-sm p-5 mb-6">
+      <div class="flex items-start justify-between gap-6 flex-wrap">
+        <div class="flex-1 min-w-[280px]">
+          <h2 class="font-serif text-2xl">Load your corpus</h2>
+          <p class="text-sm text-gray-600 mt-1 max-w-2xl">Everything the twelve agents produce is generated from the file you upload here — nothing is pre-baked. Drop in an Excel workbook (sheets are auto-detected: tickets, Jira, transcripts, documents), or CSV / JSON / TXT.</p>
+          <div id="dz-main" class="dropzone rounded-lg p-4 mt-3 text-center text-sm text-gray-600">
+            <input type="file" class="wb-file hidden" accept=".xlsx,.xlsm,.xls,.csv,.tsv,.json,.txt,.md" multiple />
+            <button class="wb-browse bg-accent text-white px-4 py-2 rounded-md text-sm font-semibold">Choose files</button>
+            <span class="ml-2">or drag them here</span>
+            <div class="text-xs text-gray-500 mt-2">.xlsx · .xlsm · .xls · .csv · .tsv · .json · .txt · .md</div>
+            <div class="text-xs text-gray-500 mt-1">
+              <a href="/templates/USRM_KT_corpus.xlsx" class="underline font-semibold">USRM demo corpus</a> (incidents · changes · KB · KT transcript · runbooks) ·
+              <a href="/api/template?kind=blank" class="underline">Blank template</a> ·
+              <a href="/api/template?kind=sample" class="underline">Sample corpus</a>
+            </div>
+          </div>
+          <div id="file-list" class="mt-3 text-xs"></div>
+        </div>
+        <div class="min-w-[260px]">
+          <div class="text-xs uppercase tracking-wider text-gray-500 font-semibold mb-2">Attribution (optional)</div>
+          <label class="block text-xs text-gray-600">SME name
+            <input id="sme-name" class="w-full border rounded px-2 py-1 mt-1 text-sm" placeholder="auto-detected from the data" />
+          </label>
+          <label class="block text-xs text-gray-600 mt-2">Trainee name
+            <input id="trainee-name" class="w-full border rounded px-2 py-1 mt-1 text-sm" placeholder="Incoming handler" />
+          </label>
+          <div class="text-xs text-gray-500 mt-2">Left blank, the Archivist infers the SME from the handler/assignee column.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm p-5 mb-6 flex items-center justify-between gap-6 flex-wrap">
+      <div>
+        <h2 class="font-serif text-2xl">Twelve agents · five KT steps</h2>
+        <p class="text-sm text-gray-600 mt-1 max-w-2xl">Click <b>Run pipeline</b> to start at the Archivist, then walk it with <b>Next</b> through Planning → KT → Shadow → Reverse Shadow → Compounding Intelligence. Eight agents make live Claude calls against your upload; the rest render from the real upstream output. Each agent keeps its last result — click any agent to show it again without re-running, or hit <b>Re-run live</b> to refresh.</p>
+      </div>
+      <div class="flex flex-col items-end gap-2 min-w-[220px]">
+        <button id="run-pipeline" class="run-btn bg-accent text-white px-6 py-3 rounded-md text-sm font-semibold whitespace-nowrap">▶ Run pipeline</button>
+        <div class="text-xs text-gray-500" id="progress-label">0 of 12 activated</div>
+        <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden"><div id="progress" class="progress-bar h-full" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div id="pillar-grid" class="space-y-8"></div>
+  </section>
+
+  <section id="tab-data" class="tab-panel hidden">
+    <h2 class="font-serif text-3xl mb-2">Loaded data</h2>
+    <p class="text-gray-600 max-w-3xl mb-6">What the agents can actually see. Sheets are classified by name; anything unrecognised is treated as the ticket corpus if no ticket sheet was found.</p>
+    <div id="data-detail"></div>
+  </section>
+
+  <section id="tab-map" class="tab-panel hidden">
+    <h2 class="font-serif text-3xl mb-2">System Map</h2>
+    <p class="text-gray-600 max-w-3xl mb-8">Five steps, one compounding loop: the outgoing SME's judgment is swept in during <b>Planning</b>, drawn out during <b>KT</b>, hardened through <b>Shadow</b> and <b>Reverse Shadow</b>, and finally turned into automation and agent-ready work that feeds new opportunities back into the platform.</p>
+    <div class="space-y-3">
+      <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-sky-500"><div class="text-xs uppercase tracking-wider text-sky-700 font-semibold">Step 1 · Planning (Pre-KT)</div><div class="font-serif text-lg mt-1">Archivist · Interview Planner</div><div class="text-sm text-gray-600 mt-1">Sweep the uploaded corpus; live Jira only on request. Turn the gaps into a per-application session plan.</div></div>
+      <div class="text-center text-gray-400">&darr;</div>
+      <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-violet-500"><div class="text-xs uppercase tracking-wider text-violet-700 font-semibold">Step 2 · Knowledge Transition</div><div class="font-serif text-lg mt-1">Observer · Interviewer · Extractor · Playbook Composer</div><div class="text-sm text-gray-600 mt-1">Capture the sessions; extract rules and heuristics; compose the living Playbook.</div></div>
+      <div class="text-center text-gray-400">&darr;</div>
+      <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-teal-600"><div class="text-xs uppercase tracking-wider accent font-semibold">Step 3 · Shadow</div><div class="font-serif text-lg mt-1">Knowledge Graph · Reviewer Copilot (HITL)</div><div class="text-sm text-gray-600 mt-1">Wire the causal graph; the SME's approve / edit / reject diff drives the confidence score.</div></div>
+      <div class="text-center text-gray-400">&darr;</div>
+      <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-green-600"><div class="text-xs uppercase tracking-wider text-green-700 font-semibold">Step 4 · Reverse Shadow</div><div class="font-serif text-lg mt-1">Completeness Validator · Coach · Knowledge Copilot</div><div class="text-sm text-gray-600 mt-1">Prove coverage; coach the incoming team; assist live while they run solo.</div></div>
+      <div class="text-center text-gray-400">&darr;</div>
+      <div class="bg-white rounded-lg shadow-sm p-5 border-l-4 border-amber-500"><div class="text-xs uppercase tracking-wider text-amber-700 font-semibold">Step 5 · Compounding Intelligence</div><div class="font-serif text-lg mt-1">Automation Prioritizer</div><div class="text-sm text-gray-600 mt-1">Score every procedure for automation; surface reactive→proactive and agent-ready work — the loop that lets the team run with a lighter footprint.</div></div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="max-w-7xl mx-auto px-6 py-8 text-xs text-gray-500 text-center border-t mt-16">
+  SME Knowledge Workbench · Capture &rarr; Structure &rarr; Validate &rarr; Activate
+</footer>
+
+<script>
+/* ------------------------------------------------------------------ *
+ * Agent registry
+ * ------------------------------------------------------------------ */
+const AGENTS = [
+  // Step 1 · Planning (Pre-KT)
+  { id:"archivist",        pillar:1, pillarName:"Planning",     build:"REAL", autonomy:"AUTO", displayName:"Archivist",          tagline:"Sweeps the uploaded ServiceNow / Jira / Confluence corpus for the outgoing SME. Live Jira only when you connect it." },
+  { id:"interviewPlanner", pillar:1, pillarName:"Planning",     build:"REAL", autonomy:"AUTO", displayName:"Interview Planner",   tagline:"Turns the Archivist's gap read into a per-application KT session plan with gap-targeted questions." },
+  // Step 2 · Knowledge Transition
+  { id:"observer",         pillar:2, pillarName:"KT",           build:"MOCK", autonomy:"AUTO", displayName:"Observer",           tagline:"Session capture — screen-level traces of how the SME actually resolves a ticket." },
+  { id:"interviewer",      pillar:2, pillarName:"KT",           build:"MOCK", autonomy:"HITL", displayName:"Interviewer",        tagline:"Sits in the KT session and asks the gap-derived questions the corpus doesn't yet explain." },
+  { id:"extractor",        pillar:2, pillarName:"KT",           build:"REAL", autonomy:"AUTO", displayName:"Extractor",          tagline:"Reads Archivist output. Extracts decision rules, exceptions and heuristics with source citations." },
+  { id:"playbook",         pillar:2, pillarName:"KT",           build:"REAL", autonomy:"AUTO", displayName:"Playbook Composer",  tagline:"The living artefact — SOPs, resolved-ticket lessons and an exception library. Always DRAFT." },
+  // Step 3 · Shadow
+  { id:"graph",            pillar:3, pillarName:"Shadow",       build:"REAL", autonomy:"AUTO", displayName:"Knowledge Graph",    tagline:"Typed nodes and labelled edges — applications, changes, incidents and the causal links between them." },
+  { id:"reviewer",         pillar:3, pillarName:"Shadow",       build:"REAL", autonomy:"HITL", displayName:"Reviewer Copilot",   tagline:"Approve / Edit / Reject across the playbook — the edit-diff is the answer to the data-quality objection." },
+  // Step 4 · Reverse Shadow
+  { id:"completeness",     pillar:4, pillarName:"Reverse Shadow",build:"MOCK",autonomy:"AUTO", displayName:"Completeness Validator", tagline:"Does the captured documentation cover what a typical KT for this application needs? Flags the gaps." },
+  { id:"coach",            pillar:4, pillarName:"Reverse Shadow",build:"REAL",autonomy:"AUTO", displayName:"Coach",              tagline:"Turns the playbook into practice questions and micro-lessons; tracks readiness before playback." },
+  { id:"copilot",          pillar:4, pillarName:"Reverse Shadow",build:"MOCK",autonomy:"AUTO", displayName:"Knowledge Copilot",  tagline:"Live decision assist at the point of work while the new team runs solo — fix path, confidence, sources." },
+  // Step 5 · Compounding Intelligence
+  { id:"automation",       pillar:5, pillarName:"Compounding",  build:"REAL", autonomy:"AUTO", displayName:"Automation Prioritizer", tagline:"Scores each procedure on frequency × automatability × ease; flags reactive→proactive and what's agent-ready." }
+];
+
+const PILLARS = [
+  { n:1, name:"1 · Planning (Pre-KT)",        desc:"Archival sweep · Interview plan" },
+  { n:2, name:"2 · Knowledge Transition",     desc:"Observe · Interview · Extract · Compose" },
+  { n:3, name:"3 · Shadow",                   desc:"Knowledge graph · Human review" },
+  { n:4, name:"4 · Reverse Shadow",           desc:"Validate · Coach · Copilot" },
+  { n:5, name:"5 · Compounding Intelligence", desc:"Automation & agent-ready prioritization" }
+];
+
+/* ------------------------------------------------------------------ *
+ * State — everything lives in memory for the session. Nothing seeded.
+ * ------------------------------------------------------------------ */
+const store = {
+  files: [],
+  sheets: [],
+  tickets: [], jira: [], transcripts: [], documents: [],
+  stats: {},
+  jiraLive: null,
+  jiraStatus: "idle",
+  coachDocs: [],
+  pipeline: { archivist:null, extraction:null, graph:null, playbook:null, coach:null, interviewPlan:null, automation:null },
+  trail: [],
+  revisions: {},
+  // Rendered-result cache, keyed by agent id. Lets a run-once agent show its
+  // last output on click without firing another Claude call. Cleared whenever
+  // the corpus changes (see invalidatePipeline).
+  results: {}
+};
+const state = { active: null, done: new Set(), running: new Set() };
+
+// REAL agents whose API result is worth caching, in pipeline order. Re-running
+// one clears the cached results of everything downstream of it.
+const PIPELINE_ORDER = ["archivist","interviewPlanner","extractor","graph","playbook","reviewer","coach","automation"];
+function clearDownstreamResults(id) {
+  const i = PIPELINE_ORDER.indexOf(id);
+  if (i < 0) return;
+  for (const dn of PIPELINE_ORDER.slice(i + 1)) delete store.results[dn];
+}
+
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const pill = (t,k) => `<span class="pill pill-${k}">${t}</span>`;
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const hasData = () => (store.tickets.length + store.jira.length + store.transcripts.length + store.documents.length) > 0
+  || !!(store.jiraLive && (store.jiraLive.jira?.issues?.length || store.jiraLive.confluence?.results?.length));
+
+/* ------------------------------------------------------------------ *
+ * Tabs
+ * ------------------------------------------------------------------ */
+function showTab(name) {
+  $$('.tab-panel').forEach(p => p.classList.add('hidden'));
+  $$('.tab-btn').forEach(b => { b.classList.remove('active','text-white'); b.classList.add('text-gray-300'); });
+  document.getElementById(`tab-${name}`)?.classList.remove('hidden');
+  const btn = document.querySelector(`.tab-btn[data-tab="${name}"]`);
+  if (btn) { btn.classList.add('active','text-white'); btn.classList.remove('text-gray-300'); }
+  if (name === 'data') renderDataTab();
+}
+$$('.tab-btn').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+$('#header-home').addEventListener('click', () => { state.active = null; state.done = new Set(); showTab('dashboard'); render(); });
+
+$('#run-pipeline').addEventListener('click', () => {
+  if (!hasData()) {
+    const c = $('#data-card');
+    c.classList.add('flash');
+    c.scrollIntoView({ behavior:'smooth', block:'center' });
+    setTimeout(() => c.classList.remove('flash'), 2400);
+    return;
+  }
+  state.done = new Set();
+  activate(AGENTS[0].id);
+  setTimeout(() => document.querySelector('[data-agent-card="observer"]')?.scrollIntoView({behavior:'smooth',block:'center'}), 120);
+});
+
+/* ------------------------------------------------------------------ *
+ * File ingestion — Excel / CSV / JSON / text
+ * ------------------------------------------------------------------ */
+// The parser is vendored into this deployment so uploads keep working on
+// networks that block public CDNs. The full CDN build is tried first only for
+// legacy .xls, which the vendored slim build does not cover.
+const XLSX_LOCAL = "/vendor/xlsx.min.js";   // slim build, shipped in the repo
+const XLSX_SERVED = "/api/xlsx-lib";        // full build, served by this deployment
+const XLSX_CDNS = [
+  "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+  "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+];
+let xlsxPromise = null;
+function loadXLSX(needsLegacy) {
+  if (window.XLSX) return Promise.resolve(window.XLSX);
+  if (xlsxPromise) return xlsxPromise;
+  // Legacy .xls needs the full build, which the slim local copy does not carry.
+  const order = needsLegacy
+    ? [XLSX_SERVED, ...XLSX_CDNS, XLSX_LOCAL]
+    : [XLSX_LOCAL, XLSX_SERVED, ...XLSX_CDNS];
+  xlsxPromise = new Promise((resolve, reject) => {
+    let i = 0;
+    const next = () => {
+      if (i >= order.length) { xlsxPromise = null; return reject(new Error("Could not load the spreadsheet parser.")); }
+      const s = document.createElement('script');
+      s.src = order[i++];
+      s.onload = () => window.XLSX ? resolve(window.XLSX) : next();
+      s.onerror = next;
+      document.head.appendChild(s);
+    };
+    next();
+  });
+  return xlsxPromise;
+}
+
+const BUCKETS = { tickets: "Ticket / incident corpus", jira: "Jira tickets", transcripts: "Transcripts", documents: "Documents / wiki", ignore: "Ignore this sheet" };
+const MAX_ROWS_PER_SHEET = 25000;   // keeps a very large workbook responsive
+const MAX_HEADER_SCAN = 30;         // rows to scan for the real header row
+
+/** Route a sheet by its tab name. Returns "" when the name says nothing. */
+function classifySheet(name) {
+  const n = (name || "").toLowerCase();
+  if (/jira|epic|story|backlog|sprint|issue key/.test(n)) return "jira";
+  if (/transcript|interview|chat|teams|slack|conversation|call|meeting/.test(n)) return "transcripts";
+  if (/confluence|wiki|page|kb|article|sop|procedure|policy|guide|runbook|document/.test(n)) return "documents";
+  if (/ticket|claim|case|incident|inc\b|record|servicenow|snow|loss|issue|request|work ?order|matter/.test(n)) return "tickets";
+  return "";
+}
+
+/** Fallback routing when the tab name is unhelpful: read the columns instead. */
+function inferKindFromColumns(columns, rows) {
+  const cols = columns.map(c => c.toLowerCase());
+  const has = re => cols.some(c => re.test(c));
+  if (has(/^speaker$|^who$|^author$/) && has(/^(text|message|utterance|comment)$/)) return "transcripts";
+  if (has(/^(title|page|heading)$/) && has(/^(body|text|content)$/) && !has(/status|priority|assignee/)) return "documents";
+  const keyCol = columns.find(c => /^(key|issue ?key|issue ?id)$/i.test(c));
+  if (keyCol) {
+    const sampleVals = rows.slice(0, 20).map(r => String(r[keyCol] ?? ""));
+    if (sampleVals.filter(v => /^[A-Z][A-Z0-9]*-\d+$/.test(v)).length >= Math.max(1, sampleVals.length * 0.5)) return "jira";
+  }
+  if (has(/jira/)) return "jira";
+  return "tickets";
+}
+
+function cleanRow(row) {
+  const out = {};
+  for (const [k, v] of Object.entries(row || {})) {
+    const key = String(k).trim();
+    if (!key || key.startsWith("__EMPTY")) continue;
+    if (v === null || v === undefined || v === "") continue;
+    out[key] = typeof v === "string" ? v.trim() : v;
+  }
+  return out;
+}
+
+/**
+ * Read a worksheet into row objects, finding the real header row first.
+ * Real client workbooks often carry a title, a blank line, an export
+ * timestamp and so on above the actual column headers.
+ */
+function readSheetRows(XLSX, ws) {
+  // blankrows:true keeps array indices aligned with real spreadsheet rows, so
+  // the "header on row N" we report back matches what the user sees in Excel.
+  const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: false, blankrows: true });
+  if (!aoa.length) return { headers: [], rows: [], headerRow: 0, truncated: 0 };
+  const width = r => (r || []).filter(c => c !== null && String(c).trim() !== "").length;
+
+  // The header row is the first row with >= 2 labels whose next non-blank row
+  // is of comparable width — i.e. the first row that actually starts a table.
+  let hdr = 0;
+  const limit = Math.min(aoa.length, MAX_HEADER_SCAN);
+  for (let i = 0; i < limit; i++) {
+    const w = width(aoa[i]);
+    if (w < 2) continue;
+    let j = i + 1;
+    while (j < aoa.length && !width(aoa[j])) j++;
+    if (width(aoa[j]) >= Math.max(2, Math.floor(w * 0.4))) { hdr = i; break; }
+  }
+
+  const seen = {};
+  const headers = (aoa[hdr] || []).map((c, i) => {
+    let name = String(c ?? "").trim().replace(/\s+/g, " ");
+    if (!name) name = `column_${i + 1}`;
+    if (seen[name] !== undefined) { seen[name]++; name = `${name}_${seen[name]}`; } else seen[name] = 0;
+    return name;
+  });
+
+  const rows = [];
+  let truncated = 0;
+  for (let i = hdr + 1; i < aoa.length; i++) {
+    if (rows.length >= MAX_ROWS_PER_SHEET) { truncated = aoa.length - i; break; }
+    const raw = aoa[i] || [];
+    if (!width(raw)) continue;
+    const obj = {};
+    headers.forEach((h, c) => {
+      const v = raw[c];
+      if (v === null || v === undefined || String(v).trim() === "") return;
+      obj[h] = typeof v === "string" ? v.trim() : v;
+    });
+    if (Object.keys(obj).length) rows.push(obj);
+  }
+  return { headers, rows, headerRow: hdr, truncated };
+}
+
+function computeStats(rows) {
+  const cols = {};
+  for (const r of rows) {
+    for (const [k, v] of Object.entries(r)) {
+      const c = cols[k] || (cols[k] = { filled: 0, numeric: 0, distinct: new Map() });
+      c.filled++;
+      const num = typeof v === "number" ? v : Number(String(v).replace(/[$,\s]/g, ""));
+      if (Number.isFinite(num) && String(v).trim() !== "") { c.numeric++; c.min = c.min === undefined ? num : Math.min(c.min, num); c.max = c.max === undefined ? num : Math.max(c.max, num); }
+      const key = String(v).slice(0, 60);
+      if (c.distinct.size < 200) c.distinct.set(key, (c.distinct.get(key) || 0) + 1);
+    }
+  }
+  const out = {};
+  for (const [k, c] of Object.entries(cols)) {
+    const top = [...c.distinct.entries()].sort((a,b) => b[1]-a[1]).slice(0, 6).map(([v,n]) => `${v} (${n})`);
+    out[k] = {
+      filled: c.filled,
+      kind: c.numeric > c.filled * 0.7 ? "numeric" : "text",
+      distinct_seen: c.distinct.size,
+      top_values: top,
+      ...(c.min !== undefined ? { min: c.min, max: c.max } : {})
+    };
+  }
+  return out;
+}
+
+function parseTranscriptText(txt, name) {
+  const rows = [];
+  const re = /(?:\*\*)?([A-Z][A-Za-z.\-' ]{1,40}?)(?:\*\*)?\s*(?:\*)?\[(\d{4}-\d{2}-\d{2})\](?:\*)?\s*:\s*([\s\S]*?)(?=\n\s*(?:\*\*)?[A-Z][A-Za-z.\-' ]{1,40}?(?:\*\*)?\s*(?:\*)?\[\d{4}-\d{2}-\d{2}\]|$)/g;
+  let m;
+  while ((m = re.exec(txt)) !== null) {
+    rows.push({ speaker: m[1].trim(), date: m[2], text: m[3].trim().replace(/\s+/g, " ") });
+  }
+  if (!rows.length) rows.push({ speaker: "(unstructured)", date: "", text: txt.slice(0, 6000), file: name });
+  return rows;
+}
+
+function ingestJsonPayload(json, name) {
+  // Accept the common export shapes without demanding a schema.
+  const buckets = { tickets: [], jira: [], transcripts: [], documents: [] };
+  const push = (kind, rows) => buckets[kind].push(...rows.map(cleanRow));
+  if (Array.isArray(json)) {
+    push(/jira/i.test(name) ? "jira" : "tickets", json);
+  } else if (json && typeof json === "object") {
+    if (Array.isArray(json.result)) push("tickets", json.result);
+    if (Array.isArray(json.issues)) push("jira", json.issues.map(i => i.fields ? { key: i.key, ...i.fields } : i));
+    if (Array.isArray(json.results)) push("documents", json.results);
+    if (Array.isArray(json.messages)) push("transcripts", json.messages.map(m => ({
+      speaker: m.from?.user?.displayName || m.speaker || "",
+      date: (m.createdDateTime || m.date || "").slice(0, 10),
+      text: String(m.body?.content || m.text || "").replace(/<[^>]+>/g, " ").trim()
+    })));
+    const leftover = Object.entries(json).filter(([k, v]) => Array.isArray(v) && !["result","issues","results","messages"].includes(k));
+    for (const [k, v] of leftover) {
+      const kind = classifySheet(k) || "documents";
+      push(kind, v.filter(x => x && typeof x === "object"));
+    }
+  }
+  return buckets;
+}
+
+let sheetSeq = 0;
+function addSheet(meta) {
+  store.sheets.push({ id: "s" + (++sheetSeq), truncated: 0, auto: true, ...meta });
+}
+
+/** Derive the four working buckets from the (re-routable) sheet list. */
+function rebuildBuckets() {
+  store.tickets = []; store.jira = []; store.transcripts = []; store.documents = [];
+  for (const s of store.sheets) {
+    if (s.kind === "ignore" || !store[s.kind]) continue;
+    store[s.kind].push(...s.rows);
+  }
+  store.stats = { tickets: computeStats(store.tickets), jira: computeStats(store.jira) };
+}
+
+/** A change in the corpus invalidates every downstream agent result. */
+function invalidatePipeline() {
+  store.pipeline = { archivist:null, extraction:null, graph:null, playbook:null, coach:null, interviewPlan:null, automation:null };
+  store.trail = []; store.revisions = {};
+  store.results = {};        // a corpus change invalidates every cached result
+  state.done = new Set();
+}
+
+async function ingestFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  for (const f of files) {
+    const lower = f.name.toLowerCase();
+    const mb = (f.size / 1048576).toFixed(1);
+    setStatus(`Reading ${f.name} (${mb} MB)…`);
+    try {
+      if (/\.(xlsx|xlsm|xls|csv|tsv)$/.test(lower)) {
+        const XLSX = await loadXLSX(/\.xls$/.test(lower));
+        const buf = await f.arrayBuffer();
+        setStatus(`Parsing ${f.name}…`);
+        const wb = XLSX.read(buf, { type: "array", cellDates: true });
+        let added = 0;
+        for (const sheetName of wb.SheetNames) {
+          setStatus(`Parsing ${f.name} → ${sheetName}…`);
+          await new Promise(r => setTimeout(r, 0));   // let the status paint on big books
+          const { headers, rows, headerRow, truncated } = readSheetRows(XLSX, wb.Sheets[sheetName]);
+          if (!rows.length) continue;
+          const named = classifySheet(sheetName);
+          addSheet({
+            file: f.name, sheet: sheetName,
+            kind: named || inferKindFromColumns(headers, rows),
+            auto: !named, headerRow, truncated,
+            rows, columns: headers.filter(h => rows.some(r => r[h] !== undefined)),
+          });
+          added += rows.length;
+        }
+        store.files.push({ name: f.name, kind: "workbook", rows: `${wb.SheetNames.length} sheet${wb.SheetNames.length > 1 ? "s" : ""}, ${added.toLocaleString()} rows` });
+      } else if (lower.endsWith(".json")) {
+        const json = JSON.parse(await f.text());
+        const b = ingestJsonPayload(json, f.name);
+        Object.entries(b).forEach(([k, rows]) => {
+          if (rows.length) addSheet({ file: f.name, sheet: k, kind: k, auto: false, headerRow: 0, rows, columns: Object.keys(rows[0] || {}) });
+        });
+        store.files.push({ name: f.name, kind: "json", rows: Object.values(b).reduce((a, r) => a + r.length, 0) + " rows" });
+      } else {
+        const txt = await f.text();
+        const rows = parseTranscriptText(txt, f.name);
+        addSheet({ file: f.name, sheet: "transcript", kind: "transcripts", auto: false, headerRow: 0, rows, columns: Object.keys(rows[0] || {}) });
+        store.files.push({ name: f.name, kind: "text", rows: rows.length + " lines" });
+      }
+    } catch (err) {
+      store.files.push({ name: f.name, kind: "error", rows: err.message });
+    }
+  }
+  rebuildBuckets();
+  invalidatePipeline();
+  setStatus(null);
+  renderFileList();
+  render();
+  if (state.active) activate(state.active, true);
+}
+
+function setStatus(msg) {
+  const total = store.tickets.length + store.jira.length + store.transcripts.length + store.documents.length;
+  $('#header-status').innerHTML = msg
+    ? `<span class="spin"></span> ${esc(msg)}`
+    : (total ? `${total.toLocaleString()} records loaded` : "No data loaded");
+}
+
+function renderFileList() {
+  const el = $('#file-list');
+  if (!store.files.length) { el.innerHTML = ""; return; }
+  const counts = [
+    ["Tickets", store.tickets.length], ["Jira", store.jira.length],
+    ["Transcripts", store.transcripts.length], ["Documents", store.documents.length]
+  ].filter(([, n]) => n);
+  const truncated = store.sheets.filter(s => s.truncated);
+  el.innerHTML = `
+    <div class="flex flex-wrap gap-2 mb-2">${counts.map(([k, n]) => `<span class="pill pill-real">${k}: ${n.toLocaleString()}</span>`).join("")}</div>
+    <div class="space-y-1">${store.files.map(f => `<div class="${f.kind === 'error' ? 'text-red-600' : 'text-gray-600'}">· ${esc(f.name)} — ${esc(f.rows)}</div>`).join("")}</div>
+    ${truncated.length ? `<div class="text-amber-700 mt-1">⚠ ${truncated.map(s => `${esc(s.sheet)}: first ${MAX_ROWS_PER_SHEET.toLocaleString()} rows kept, ${s.truncated.toLocaleString()} skipped`).join('; ')}</div>` : ''}
+    ${store.sheets.length ? `<div class="mt-2">${sheetRoutingHtml()}</div>` : ''}
+    <button id="clear-data" class="mt-2 text-xs underline text-gray-500">Clear all data</button>`;
+  $('#clear-data')?.addEventListener('click', () => {
+    Object.assign(store, { files:[], sheets:[], tickets:[], jira:[], transcripts:[], documents:[], stats:{}, jiraLive:null, jiraStatus:"idle", coachDocs:[], pipeline:{archivist:null,extraction:null,graph:null,playbook:null,coach:null,interviewPlan:null,automation:null}, trail:[], revisions:{}, results:{} });
+    state.done = new Set(); state.active = null;
+    setStatus(null); renderFileList(); render();
+  });
+}
+
+/** Per-sheet routing controls — tab names are a hint, not a requirement. */
+function sheetRoutingHtml(compact) {
+  if (!store.sheets.length) return "";
+  return `<div class="no-toggle">
+    <div class="text-gray-500 mb-1">Sheet routing${compact ? '' : ' — override any row if a tab was read the wrong way'}:</div>
+    <div class="space-y-1">${store.sheets.map(s => `
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="font-mono">${esc(s.sheet)}</span>
+        <span class="text-gray-400">${s.rows.length.toLocaleString()} rows${s.headerRow ? ` · header on row ${s.headerRow + 1}` : ''}</span>
+        <span class="text-gray-400">→</span>
+        <select class="sheet-kind no-toggle border rounded px-1 py-0.5 text-xs" data-sheet="${s.id}">
+          ${Object.entries(BUCKETS).map(([k, label]) => `<option value="${k}"${s.kind === k ? ' selected' : ''}>${label}</option>`).join("")}
+        </select>
+        ${s.auto ? '<span class="text-gray-400">(inferred from columns)</span>' : ''}
+      </div>`).join("")}</div>
+  </div>`;
+}
+
+// Drag & drop + browse, delegated so it works in every panel that renders one.
+document.addEventListener('click', e => {
+  const b = e.target.closest('.wb-browse');
+  if (!b) return;
+  e.stopPropagation();
+  b.parentElement.querySelector('.wb-file')?.click();
+});
+document.addEventListener('change', e => {
+  if (e.target.classList?.contains('sheet-kind')) {
+    const s = store.sheets.find(x => x.id === e.target.dataset.sheet);
+    if (s) {
+      s.kind = e.target.value; s.auto = false;
+      rebuildBuckets(); invalidatePipeline();
+      renderFileList(); render();
+      if (state.active) activate(state.active, true);
+    }
+    return;
+  }
+  if (e.target.classList?.contains('wb-file')) { ingestFiles(e.target.files); e.target.value = ""; }
+  if (e.target.classList?.contains('coach-file')) {
+    const files = Array.from(e.target.files || []);
+    Promise.all(files.map(f => f.text().then(content => ({ name: f.name, content })))).then(docs => {
+      store.coachDocs.push(...docs);
+      e.target.value = "";
+      if (state.active === 'coach') activate('coach', true);
+    });
+  }
+});
+['dragenter','dragover'].forEach(ev => document.addEventListener(ev, e => {
+  const dz = e.target.closest('.dropzone'); if (!dz) return;
+  e.preventDefault(); dz.classList.add('hot');
+}));
+['dragleave','drop'].forEach(ev => document.addEventListener(ev, e => {
+  const dz = e.target.closest('.dropzone'); if (!dz) return;
+  e.preventDefault(); dz.classList.remove('hot');
+  if (ev === 'drop') ingestFiles(e.dataTransfer?.files);
+}));
+
+/* ------------------------------------------------------------------ *
+ * Payload builders — bounded so serverless bodies stay small
+ * ------------------------------------------------------------------ */
+const cap = (arr, n) => (arr || []).slice(0, n).map(r => {
+  const o = {};
+  for (const [k, v] of Object.entries(r)) o[k] = typeof v === "string" && v.length > 600 ? v.slice(0, 600) + "…" : v;
+  return o;
+});
+
+function corpusPayload() {
+  return {
+    files: store.files.map(f => ({ name: f.name, kind: f.kind })),
+    tickets: cap(store.tickets, 80),
+    jira: cap(store.jira, 50),
+    transcripts: cap(store.transcripts, 40),
+    documents: cap(store.documents, 30),
+    stats: store.stats,
+    totals: {
+      tickets: store.tickets.length, jira: store.jira.length,
+      transcripts: store.transcripts.length, documents: store.documents.length
+    }
+  };
+}
+const smeName = () => $('#sme-name')?.value.trim() || store.pipeline.archivist?.sme_name || "";
+const traineeName = () => $('#trainee-name')?.value.trim() || "Incoming handler";
+
+/* ------------------------------------------------------------------ *
+ * KPI row — derived, never hardcoded
+ * ------------------------------------------------------------------ */
+function renderKpis() {
+  const pb = store.pipeline.playbook;
+  const ex = store.pipeline.extraction;
+  const au = store.pipeline.automation;
+  const sources = new Set();
+  if (store.tickets.length) sources.add('tickets');
+  if (store.jira.length) sources.add('jira-file');
+  if (store.transcripts.length) sources.add('transcripts');
+  if (store.documents.length) sources.add('documents');
+  if (store.jiraLive?.jira?.issues?.length) sources.add('jira-live');
+  if (store.jiraLive?.confluence?.results?.length) sources.add('confluence-live');
+
+  const kpis = [
+    { label: "Records loaded", value: (store.tickets.length + store.jira.length + store.transcripts.length + store.documents.length).toLocaleString(), sub: store.files.length ? `${store.files.length} file${store.files.length>1?'s':''}` : "awaiting upload" },
+    { label: "Sources", value: sources.size, sub: store.jiraLive?.connected ? "Jira live" : "upload only" },
+    { label: "Rules extracted", value: (ex?.decision_rules || []).length, sub: (ex?.heuristics || []).length + " heuristics" },
+    { label: "SOPs drafted", value: (pb?.sops || []).length, sub: pb ? `v${pb.version || '1.0'} · ${pb.status || 'DRAFT'}` : "no playbook yet" },
+    { label: "Agent-ready", value: (au?.candidates || []).filter(c => c.agent_ready).length, sub: au ? `${(au.candidates || []).length} scored · ${store.trail.length} reviews` : "run automation step" }
+  ];
+  $('#kpi-row').innerHTML = kpis.map(k => `
+    <div class="kpi-card bg-white p-5 rounded-lg shadow-sm">
+      <div class="text-xs uppercase tracking-wider text-gray-500">${k.label}</div>
+      <div class="font-serif text-4xl font-bold mt-1">${k.value}</div>
+      <div class="text-xs text-gray-500 mt-1">${esc(k.sub)}</div>
+    </div>`).join("");
+}
+
+/* ------------------------------------------------------------------ *
+ * Cards
+ * ------------------------------------------------------------------ */
+function updateProgress() {
+  const n = state.done.size;
+  $('#progress').style.width = Math.round((n / AGENTS.length) * 100) + '%';
+  $('#progress-label').textContent = `${n} of ${AGENTS.length} activated`;
+}
+
+function render() {
+  renderKpis();
+  $('#pillar-grid').innerHTML = PILLARS.map(p => {
+    const agents = AGENTS.filter(a => a.pillar === p.n);
+    return `<div>
+      <div class="flex items-baseline justify-between mb-3">
+        <div><div class="text-xs uppercase tracking-widest text-gray-500">Pillar ${p.n}</div><div class="font-serif text-2xl">${p.name}</div></div>
+        <div class="text-xs text-gray-500">${p.desc}</div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">${agents.map(renderCard).join('')}</div>
+    </div>`;
+  }).join('');
+  $$('#pillar-grid [data-agent-card]').forEach(el => el.addEventListener('click', e => {
+    if (e.target.closest('.no-toggle')) return;
+    activate(el.dataset.agentCard);
+  }));
+  updateProgress();
+  setStatus(null);
+}
+
+function renderCard(a) {
+  const isActive = state.active === a.id;
+  const isDone = state.done.has(a.id);
+  const cls = ['agent-card','bg-white','p-5','rounded-lg','shadow-sm','border','border-gray-200'];
+  if (isActive) cls.push('active','pulse','md:col-span-3');
+  if (isDone && !isActive) cls.push('done');
+  return `<div class="${cls.join(' ')}" data-agent-card="${a.id}">
+    <div class="flex items-start justify-between mb-3">
+      <div class="agent-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/></svg></div>
+      <div class="flex gap-1">${pill(a.build, a.build === 'REAL' ? 'real' : 'mock')}${pill(a.autonomy, a.autonomy === 'AUTO' ? 'auto' : 'hitl')}</div>
+    </div>
+    <div class="agent-title font-serif text-lg font-semibold">${a.displayName}</div>
+    <div class="text-sm text-gray-600 mt-1">${a.tagline}</div>
+    ${isActive ? `<div class="scene-panel mt-4 pt-4 border-t" id="scene-${a.id}"><div class="text-gray-500 text-sm"><span class="spin"></span> Running&hellip;</div></div>` : ''}
+  </div>`;
+}
+
+async function activate(id, keepOpen, forceRun) {
+  // Plain click on the already-open card collapses it (marks it done).
+  if (state.active === id && !keepOpen && !forceRun) { state.done.add(id); state.active = null; render(); return; }
+  state.active = id;
+  render();
+  const a = AGENTS.find(x => x.id === id);
+  const scene = document.getElementById(`scene-${id}`);
+  if (!scene) return;
+
+  // "If it is running, let it run." A second plain activation of an in-flight
+  // agent does not fire another call — the original run will paint when it lands.
+  if (state.running.has(id) && !forceRun) return;
+
+  const isReal = a.build === 'REAL' && !NO_CACHE_AGENTS.has(id);
+  const cached = store.results[id];
+  const serveCache = isReal && cached && !keepOpen && !forceRun;
+
+  // A live re-run refreshes this agent and invalidates everything downstream of
+  // it, so the next time a downstream agent is opened it runs on fresh input.
+  if (forceRun) { delete store.results[id]; clearDownstreamResults(id); }
+
+  let html;
+  if (serveCache) {
+    html = cacheBanner(cached.ts) + cached.html;
+  } else {
+    state.running.add(id);
+    try { html = await renderSceneBody(a); }
+    catch (err) { html = errorBox(`Scene failed: ${esc(err.message)}`); }
+    state.running.delete(id);
+    if (state.active !== id) return;
+    // Cache only a real, successful render (never an awaiting/error state).
+    if (isReal && !html.includes('data-nocache')) {
+      store.results[id] = { html, ts: new Date().toISOString() };
+    }
+  }
+  if (state.active !== id) return;
+  scene.innerHTML = html;
+  scene.querySelector('.rerun-btn')?.addEventListener('click', e => { e.stopPropagation(); activate(id, false, true); });
+
+  const idx = AGENTS.findIndex(x => x.id === id);
+  const nextAgent = AGENTS[idx + 1];
+  const row = document.createElement('div');
+  row.className = 'no-toggle mt-4 flex items-center gap-3 justify-end';
+  const marker = a.autonomy === 'HITL' ? '<span class="pill pill-hitl">HITL · your review needed</span>' : '<span class="pill pill-auto">AUTO</span>';
+  const label = nextAgent ? `Next → ${nextAgent.displayName}` : 'Finish';
+  row.innerHTML = `${marker}<button class="bg-slate-900 text-white hover:bg-teal-700 px-5 py-2 rounded-md text-sm font-semibold no-toggle">${label}</button>`;
+  scene.appendChild(row);
+  row.querySelector('button').onclick = e => {
+    e.stopPropagation();
+    state.done.add(id);
+    if (nextAgent) { activate(nextAgent.id); setTimeout(() => document.querySelector(`[data-agent-card="${nextAgent.id}"]`)?.scrollIntoView({behavior:'smooth',block:'center'}), 120); }
+    else { state.active = null; render(); }
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Shared scene fragments
+ * ------------------------------------------------------------------ */
+function errorBox(msg) {
+  return `<div data-nocache="1" class="bg-red-50 border-l-4 border-red-500 p-3 text-sm rounded-r">${msg}</div>`;
+}
+function awaitingBox(msg) {
+  return `<div data-nocache="1" class="bg-amber-50 border-l-4 border-amber-500 p-3 text-sm rounded-r"><b>Awaiting data.</b> ${esc(msg)}</div>`;
+}
+// Reviewer is stateful/interactive (live HITL) — it always recomputes from the
+// current approval trail and is never served from cache.
+const NO_CACHE_AGENTS = new Set(["reviewer"]);
+function cacheBanner(ts) {
+  const t = new Date(ts);
+  const when = isNaN(t) ? ts : t.toLocaleString();
+  return `<div class="no-toggle mb-3 flex items-center justify-between gap-2 flex-wrap bg-slate-50 border rounded p-2 text-xs">
+    <span><span class="pill pill-auto">CACHED</span> <span class="text-gray-600">Saved result from the last run · ${esc(when)}. Downstream agents are reading this output.</span></span>
+    <button class="rerun-btn no-toggle px-3 py-1 rounded-md bg-slate-900 text-white font-semibold">↻ Re-run live</button>
+  </div>`;
+}
+function uploadPanel() {
+  const counts = [
+    ["Tickets", store.tickets.length], ["Jira rows", store.jira.length],
+    ["Transcripts", store.transcripts.length], ["Documents", store.documents.length]
+  ].filter(([, n]) => n);
+  return `<div class="dropzone rounded-lg p-3 mt-1 text-sm no-toggle">
+      <input type="file" class="wb-file hidden" accept=".xlsx,.xlsm,.xls,.csv,.tsv,.json,.txt,.md" multiple />
+      <button class="wb-browse bg-accent text-white px-3 py-1.5 rounded text-xs font-semibold no-toggle">Choose files</button>
+      <span class="ml-2 text-xs text-gray-600">or drag an Excel workbook here</span>
+      <span class="ml-2 text-xs text-gray-500">· <a href="/api/template?kind=blank" class="underline">template</a> · <a href="/api/template?kind=sample" class="underline">sample</a></span>
+      <div class="mt-2 flex flex-wrap gap-1">${counts.length ? counts.map(([k,n]) => `<span class="pill pill-real">${k}: ${n.toLocaleString()}</span>`).join("") : '<span class="text-xs text-gray-500">nothing loaded yet</span>'}</div>
+      ${store.sheets.length ? `<div class="mt-2 text-xs">${sheetRoutingHtml(true)}</div>` : ''}
+    </div>`;
+}
+function jiraPanel() {
+  const s = store.jiraStatus;
+  const live = store.jiraLive;
+  let statusHtml = '<span class="text-xs text-gray-600">Not connected — the Archivist is running on your uploads only.</span>';
+  if (s === 'connecting') statusHtml = '<span class="text-xs accent"><span class="spin"></span> Contacting Atlassian…</span>';
+  if (s === 'connected') {
+    const ji = live?.jira, cf = live?.confluence;
+    statusHtml = `<div class="text-xs space-y-1">
+      <div>${ji?.status === 'connected' ? `<span class="pill pill-live">JIRA LIVE</span> ${ji.issues.length} issues from <code>${esc(ji.meta.instance)}</code> · ${esc(ji.meta.project)}` : `<span class="pill pill-mock">JIRA ${esc(ji?.status || 'unavailable')}</span> ${esc(ji?.reason || '')}`}</div>
+      <div>${cf?.status === 'connected' ? `<span class="pill pill-live">CONFLUENCE LIVE</span> ${cf.results.length} pages from space ${esc(cf.meta.space)}` : `<span class="pill pill-mock">CONFLUENCE ${esc(cf?.status || 'unavailable')}</span> ${esc(cf?.reason || '')}`}</div>
+    </div>`;
+  }
+  if (s === 'error') statusHtml = `<span class="text-xs text-red-600">Connection failed. Check JIRA_HOST / JIRA_EMAIL / JIRA_TOKEN in the Vercel environment.</span>`;
+  return `<div class="mt-3 bg-slate-50 border rounded p-3 no-toggle">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <div class="text-sm font-semibold">Live Jira / Confluence</div>
+          <div class="text-xs text-gray-600">Off by default. Nothing is pulled from Atlassian until you click this.</div>
+        </div>
+        <button id="jira-connect" class="no-toggle px-4 py-2 rounded-md text-sm font-semibold ${s === 'connected' ? 'border border-teal-700 text-teal-700' : 'bg-slate-900 text-white'}" ${s === 'connecting' ? 'disabled' : ''}>
+          ${s === 'connected' ? '↻ Re-pull from Jira' : '🔗 Connect to Jira'}
+        </button>
+      </div>
+      <div class="mt-2">${statusHtml}</div>
+    </div>`;
+}
+
+async function callAgent(endpoint, body) {
+  const r = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  if (!r.ok) throw new Error(`${endpoint} returned HTTP ${r.status}`);
+  return r.json();
+}
+
+/** Runs a REAL agent and wraps the result with a source badge. */
+async function runReal(endpoint, body, renderFn) {
+  let j;
+  try { j = await callAgent(endpoint, body); }
+  catch (err) {
+    return errorBox(`<b>Endpoint unreachable.</b> <code>${esc(endpoint)}</code> — ${esc(err.message)}. Check the deployment's <code>api/</code> folder and environment variables.`);
+  }
+  if (j.source === 'empty') return awaitingBox(j.message || "No input for this agent yet.");
+  if (j.source === 'error') return errorBox(`<b>Agent error.</b> ${esc(j.message)}`);
+  const badge = '<span class="pill pill-live">LIVE · CLAUDE</span>';
+  return `<div class="mb-3 text-right">${badge}</div>` + renderFn(j.data, j);
+}
+
+/* ------------------------------------------------------------------ *
+ * Scenes
+ * ------------------------------------------------------------------ */
+async function renderSceneBody(a) {
+  const pb = store.pipeline.playbook;
+  const ex = store.pipeline.extraction;
+
+  switch (a.id) {
+
+    /* ---------- Pillar 1 ---------- */
+    case 'observer': {
+      if (!hasData()) return awaitingBox("Upload your corpus to see traces anchored to real records.") + uploadPanel();
+      const t = store.tickets[0] || store.jira[0] || {};
+      const idKey = Object.keys(t).find(k => /^(id|key|ticket|claim|case|number)/i.test(k));
+      const ref = idKey ? t[idKey] : "(first record)";
+      const fields = Object.keys(t).slice(0, 7);
+      return `<p class="text-sm text-gray-700 mb-2">Illustrative behavioral trace for record <b>${esc(ref)}</b> — a screen-capture agent would emit one of these per SME session. The fields below are the ones actually present in your upload.</p>
+        <div class="bg-gray-50 rounded p-3 text-xs space-y-1">
+          ${fields.map((f, i) => `<div>${String(i * 3 + 2).padStart(2,'0')}:1${i} · read <code>${esc(f)}</code> → ${esc(String(t[f]).slice(0, 70))}</div>`).join("")}
+          <div class="text-gray-500 pt-1 border-t mt-1">MOCK agent — no capture endpoint in this build.</div>
+        </div>`;
+    }
+
+    case 'interviewer': {
+      if (!hasData()) return awaitingBox("The Interviewer builds its questions from your corpus. Upload data first.") + uploadPanel();
+      const qs = [];
+      // Before the Extractor has run, target the corpus itself: sparse columns
+      // and the categories the SME handled least often.
+      const tstats = store.stats.tickets || {};
+      const n = store.tickets.length || 1;
+      const sparse = Object.entries(tstats).filter(([, c]) => c.filled < n * 0.6).slice(0, 2);
+      const catCol = Object.entries(tstats).find(([k, c]) => c.kind === 'text' && c.distinct_seen > 2 && c.distinct_seen < 15 && /cause|type|outcome|category|reason|status/i.test(k));
+      sparse.forEach(([col, c]) => qs.push(`Only ${c.filled} of ${n} records carry <code>${esc(col)}</code>. When you leave it blank, what are you relying on instead?`));
+      if (catCol) {
+        const rare = (catCol[1].top_values || []).slice(-2);
+        rare.forEach(v => qs.push(`<code>${esc(catCol[0])}</code> = ${esc(v)} shows up rarely. Walk me through one of those — what made it different?`));
+      }
+      if (store.transcripts.length) qs.push(`You said things in the transcript you never wrote in a ticket. Which of those judgments do you most want written down before you go?`);
+      // Once the Extractor has run, sharpen on what it could not ground.
+      const thin = (ex?.decision_rules || []).filter(r => (r.confidence ?? 1) < 0.8).slice(0, 2);
+      thin.forEach(r => qs.push(`You apply “${esc(r.then)}” when ${esc(r.if)}. What makes you override that?`));
+      if (ex?.corpus_signals?.coverage_note) qs.push(`The corpus is thin here — ${esc(ex.corpus_signals.coverage_note)} Can you walk through a case that covers it?`);
+      return `<p class="text-sm mb-2">Questions the Interviewer would put to <b>${esc(smeName() || 'the SME')}</b> next session, aimed at what your corpus does <i>not</i> yet explain.${ex ? '' : ' Re-open this agent after the Extractor runs and the questions sharpen.'}</p>
+        <div class="bg-gray-50 p-3 rounded text-sm space-y-2">
+          ${qs.length ? qs.slice(0, 5).map(q => `<p><b>Q:</b> ${q}</p>`).join("") : '<p class="text-gray-600">This corpus is uniformly populated — nothing obvious to probe.</p>'}
+          <div class="text-xs text-gray-500 pt-1 border-t">MOCK agent — questions composed client-side from your data.</div>
+        </div>`;
+    }
+
+    case 'archivist': {
+      if (!hasData()) {
+        return awaitingBox("The Archivist runs on what you give it. Upload an Excel workbook of tickets / Jira issues, or connect Jira.")
+          + uploadPanel() + jiraPanel();
+      }
+      const scene = await runReal('/api/archivist', { corpus: corpusPayload(), jiraLive: store.jiraLive, smeName: $('#sme-name')?.value.trim() || "" }, d => {
+        store.pipeline.archivist = d;
+        const cs = d.corpus_summary || {};
+        const sampled = cs.analysed_records != null && cs.analysed_records < cs.total_records;
+        return `<p class="text-sm mb-3">Sweep complete. <b>${(cs.total_records || 0).toLocaleString()}</b> records normalized across <b>${(d.sources_swept || []).length}</b> sources for <b>${esc(d.sme_name)}</b>. <span class="text-gray-500">${esc(d.date_range || '')}</span></p>
+        ${sampled ? `<div class="text-xs bg-amber-50 border-l-4 border-amber-400 p-2 mb-3">Corpus statistics cover all <b>${cs.total_records.toLocaleString()}</b> rows. A representative <b>${cs.analysed_records.toLocaleString()}</b> rows are passed to the language models — the rest inform the column profile the agents reason over.</div>` : ''}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">${(d.sources_swept || []).map(s => `
+          <div class="border rounded p-2 bg-white"><b>${esc(s.name)}</b> ${s.origin === 'live' ? '<span class="pill pill-live">LIVE</span>' : ''}
+            <div class="mt-1">${(s.records || 0).toLocaleString()} recs${s.analysed != null && s.analysed < s.records ? ` <span class="text-gray-400">· ${s.analysed} read</span>` : ''}</div>
+            <div class="text-gray-500 mt-1 text-[10px]">${esc(s.status)}${s.detail ? ' · ' + esc(s.detail) : ''}</div></div>`).join('')}</div>
+        ${d.corpus_read ? `<div class="bg-slate-50 border rounded p-3 text-xs mb-3">
+          <div><b>Domain read:</b> ${esc(d.corpus_read.domain || '—')}</div>
+          <div class="mt-1"><b>Primary pattern:</b> ${esc(d.corpus_read.primary_pattern || '—')}</div>
+          ${(d.corpus_read.gaps || []).length ? `<div class="mt-1"><b>Gaps:</b> ${esc((d.corpus_read.gaps || []).join('; '))}</div>` : ''}
+        </div>` : ''}
+        ${(d.field_map || []).length ? `<details class="text-xs no-toggle"><summary class="cursor-pointer font-semibold">Field mapping (${d.field_map.length})</summary>
+          <table class="grid w-full mt-2"><thead><tr><th>Your column</th><th>Mapped to</th><th>Conf.</th></tr></thead><tbody>
+          ${d.field_map.slice(0, 14).map(f => `<tr><td><code>${esc(f.source_field)}</code></td><td>${esc(f.mapped_to)}</td><td>${(f.confidence ?? 0).toFixed(2)}</td></tr>`).join("")}
+          </tbody></table></details>` : ''}`;
+      });
+      return scene + uploadPanel() + jiraPanel();
+    }
+
+    case 'interviewPlanner': {
+      if (!store.pipeline.archivist) return awaitingBox("The Interview Planner reads the Archivist's gap read. Run the Archivist first.");
+      return await runReal('/api/interview-planner', { archivist: store.pipeline.archivist, extraction: store.pipeline.extraction }, d => {
+        store.pipeline.interviewPlan = d;
+        const cs = d.coverage_summary || {};
+        return `<p class="text-sm mb-2">${esc(d.plan_title || 'Pre-KT interview plan')} for <b>${esc(d.sme || smeName() || 'the outgoing SME')}</b> — ${cs.sessions ?? (d.sessions || []).length} sessions across ${cs.applications_covered ?? '—'} applications.${store.pipeline.extraction ? '' : ' <span class="text-gray-500">(Built from the Archivist read; re-run after the Extractor to sharpen the questions.)</span>'}</p>
+        <div class="space-y-2">${(d.sessions || []).map(s => `
+          <div class="bg-white border rounded p-3 text-xs ${s.priority === 'high' ? 'border-teal-600' : ''}">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div><b>Session ${esc(s.seq)} · ${esc(s.application)}</b>${s.focus ? ` — ${esc(s.focus)}` : ''}</div>
+              <div class="flex gap-1">${pill(((s.priority || '') + '').toUpperCase() || '—', s.priority === 'high' ? 'draft' : 'mock')}<span class="pill pill-auto">${esc(s.duration_min || 60)} min</span></div>
+            </div>
+            ${s.why_now ? `<div class="text-gray-500 mt-1">Why now: ${esc(s.why_now)}</div>` : ''}
+            ${(s.gap_targeted_questions || []).length ? `<div class="mt-1"><b>Gap-targeted questions</b><ul class="list-disc ml-5 mt-1">${s.gap_targeted_questions.slice(0, 5).map(q => `<li>${esc(q)}</li>`).join('')}</ul></div>` : ''}
+            ${(s.artifacts_to_capture || []).length ? `<div class="text-gray-600 mt-1">Capture: ${esc(s.artifacts_to_capture.join('; '))}</div>` : ''}
+            ${(s.grounded_in || []).length ? `<div class="text-gray-400 mt-1">grounded in: ${esc(s.grounded_in.join(', '))}</div>` : ''}
+          </div>`).join('')}</div>
+        ${d.sequence_rationale ? `<div class="text-xs text-gray-600 mt-2"><b>Sequence:</b> ${esc(d.sequence_rationale)}</div>` : ''}
+        ${cs.note ? `<div class="text-xs text-gray-500 mt-1">${esc(cs.note)}</div>` : ''}`;
+      });
+    }
+
+    /* ---------- Pillar 2 · Knowledge Transition ---------- */
+    case 'extractor': {
+      if (!store.pipeline.archivist) return awaitingBox("Run the Archivist first — the Extractor reads its output, not the raw file.");
+      return await runReal('/api/extract', { archivist: store.pipeline.archivist }, d => {
+        store.pipeline.extraction = d;
+        return `<p class="text-sm mb-2">Structured extraction from the Archivist sweep. Every item carries a source pointer into your data.</p>
+        ${d.corpus_signals ? `<div class="text-xs bg-slate-50 border rounded p-2 mb-3"><b>Dominant pattern:</b> ${esc(d.corpus_signals.dominant_pattern || '—')} · <b>records considered:</b> ${esc(d.corpus_signals.record_count_considered ?? '—')}<div class="text-gray-600 mt-1">${esc(d.corpus_signals.coverage_note || '')}</div></div>` : ''}
+        <div class="grid md:grid-cols-2 gap-3 text-xs">
+          <div><b>Decision rules (${(d.decision_rules || []).length})</b>${(d.decision_rules || []).slice(0, 4).map(r => `<div class="bg-gray-50 p-2 mt-2 rounded"><b>if</b> ${esc(r.if)}<br/><b>then</b> ${esc(r.then)}<div class="text-gray-500 mt-1">source: ${esc(r.source)}${r.confidence != null ? ` · conf ${Number(r.confidence).toFixed(2)}` : ''}</div></div>`).join('')}</div>
+          <div><b>Heuristics (${(d.heuristics || []).length})</b>${(d.heuristics || []).slice(0, 4).map(h => `<div class="bg-gray-50 p-2 mt-2 rounded italic">“${esc(h.text)}”<div class="not-italic text-gray-500 mt-1">${esc(h.source)}</div></div>`).join('')}</div>
+        </div>
+        ${(d.exception_patterns || []).length ? `<div class="mt-3 text-xs"><b>Exception patterns (${d.exception_patterns.length})</b>${d.exception_patterns.slice(0, 3).map(e => `<div class="bg-amber-50 border-l-4 border-amber-400 p-2 mt-2"><b>${esc(e.pattern)}</b><div class="text-gray-600 mt-1">→ ${esc(e.resolution)}</div><div class="text-gray-500">${esc(e.source)}</div></div>`).join('')}</div>` : ''}`;
+      });
+    }
+
+    case 'graph': {
+      if (!ex) return awaitingBox("Run the Extractor first.");
+      return await runReal('/api/graph', { extraction: ex }, d => {
+        store.pipeline.graph = d;
+        return `<p class="text-sm mb-2">Typed knowledge graph: <b>${d.meta?.nodes || 0} nodes</b> · <b>${d.meta?.edges || 0} edges</b> · avg confidence ${(d.meta?.confidence_avg ?? 0).toFixed(2)}</p>
+        <div class="bg-gray-50 p-3 rounded text-xs">
+          <div><b>Node types present:</b> ${esc([...new Set((d.nodes || []).map(n => n.type))].join(', ') || '—')}</div>
+          <div class="mt-1"><b>Edge types present:</b> ${esc([...new Set((d.edges || []).map(e => e.label))].join(', ') || '—')}</div>
+          <div class="mt-2"><b>Sample edges:</b></div>
+          <ul class="ml-4 list-disc mt-1">${(d.edges || []).slice(0, 8).map(e => `<li>${esc(e.from)} <span class="text-gray-500">--${esc(e.label)}--&gt;</span> ${esc(e.to)} <span class="text-gray-400">(${Number(e.confidence ?? 0).toFixed(2)}${e.solid === false ? ' inferred' : ''})</span> <span class="text-gray-400">${esc((e.sources || []).join(', '))}</span></li>`).join('')}</ul>
+        </div>`;
+      });
+    }
+
+    case 'playbook': {
+      if (!ex) return awaitingBox("Run the Extractor first — the Playbook composes from the extraction plus your ticket corpus.");
+      return await runReal('/api/playbook', { extraction: ex, corpus: corpusPayload(), approvalTrail: store.trail, smeName: smeName() }, d => {
+        store.pipeline.playbook = d;
+        const rg = d.reserve_guidance;
+        const money = n => (typeof n === 'number' ? '$' + n.toLocaleString() : '—');
+        return `<div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <div><div class="font-serif text-lg">${esc(d.title || 'Playbook')}</div><div class="text-xs text-gray-500">v${esc(d.version || '1.0')} · author: ${esc(d.author_sme || smeName() || 'unattributed')}</div></div>
+          ${pill(d.status || 'DRAFT', 'draft')}
+        </div>
+        ${d.domain_summary ? `<div class="text-xs text-gray-600 mb-3">${esc(d.domain_summary)}</div>` : ''}
+        <div class="text-xs uppercase text-gray-500 font-semibold mb-2">Applicability</div>
+        <ul class="text-xs mb-3 space-y-1">${(d.applicability || []).slice(0, 6).map(x => `<li>· ${esc(x)}</li>`).join('')}</ul>
+        <div class="text-xs uppercase text-gray-500 font-semibold mb-2">SOPs (${(d.sops || []).length})</div>
+        <div class="space-y-2 mb-3">${(d.sops || []).map(s => {
+          const rev = store.revisions[`sop:${s.n}`];
+          return `<div class="bg-white border rounded p-2 text-xs ${rev ? 'border-teal-600' : ''}">
+            <b>SOP #${esc(s.n)} — ${esc(rev?.revised_title || s.title)}</b>${rev ? ' <span class="pill pill-live">SME REVISED</span>' : ''}
+            ${(s.steps || []).length ? `<ol class="list-decimal ml-5 mt-1 text-gray-700">${s.steps.slice(0, 6).map(t => `<li>${esc(t)}</li>`).join('')}</ol>` : ''}
+            <div class="text-gray-600 mt-1">${esc(rev?.revised_rationale || s.rationale || '')}</div>
+            <div class="text-gray-400 mt-1">sources: ${esc((s.sources || []).join(', '))}</div>
+          </div>`;
+        }).join('')}</div>
+        ${rg ? `<div class="mb-3 bg-amber-50 p-2 rounded text-xs"><b>Reserve first-cut:</b> ${money(rg.first_cut?.low)}–${money(rg.first_cut?.high)} (median ${money(rg.first_cut?.median)})<div class="text-gray-600 mt-1">${esc(rg.notes || '')}</div><div class="text-gray-400">derived from: ${esc((rg.derived_from || []).join(', '))}</div></div>`
+             : '<div class="mb-3 text-xs text-gray-500">No monetary reserve data in this corpus — reserve guidance omitted rather than guessed.</div>'}
+        ${(d.resolved_tickets || []).length ? `<div class="text-xs uppercase text-gray-500 font-semibold mb-2">Resolved tickets (${d.resolved_tickets.length})</div>
+          <table class="grid text-xs w-full mb-3"><thead><tr class="text-gray-500"><th>Ticket</th><th>Pattern</th><th>Lesson</th></tr></thead><tbody>
+          ${d.resolved_tickets.slice(0, 8).map(t => `<tr><td class="font-mono">${esc(t.id)}</td><td>${esc(t.pattern)}</td><td class="text-gray-600">${esc(t.lesson)}</td></tr>`).join('')}
+          </tbody></table>` : ''}
+        ${(d.exception_library || []).length ? `<div class="text-xs uppercase text-gray-500 font-semibold mb-2">Exception library</div>
+          <div class="space-y-2">${d.exception_library.map(e => {
+            const rev = store.revisions[`exc:${e.id}`];
+            return `<div class="bg-white border-l-4 border-amber-400 p-2 text-xs"><b>${esc(e.id)}:</b> ${esc(rev?.revised_title || e.trigger)}${rev ? ' <span class="pill pill-live">SME REVISED</span>' : ''}<div class="text-gray-600 mt-1">→ ${esc(rev?.revised_rationale || e.response)}</div></div>`;
+          }).join('')}</div>` : ''}`;
+      });
+    }
+
+    /* ---------- Pillar 4 · Reverse Shadow ---------- */
+    case 'completeness': {
+      if (!pb) return awaitingBox("Completeness is judged against the Playbook. Run the Playbook Composer first.");
+      const sops = pb.sops || [], exc = pb.exception_library || [];
+      const appStat = (store.stats.tickets || {})['Application'] || (store.stats.tickets || {})['application'];
+      const apps = appStat ? (appStat.top_values || []).map(v => String(v).replace(/\s*\(\d+\)$/, '')) : [];
+      const gapDocs = (store.documents || []).filter(r => /INCOMPLETE|STALE|GENERIC|MANUAL/i.test(JSON.stringify(r)));
+      const checks = [
+        ['SOPs drafted for the primary decision paths', sops.length >= 3, `${sops.length} SOPs`],
+        ['Exception library populated', exc.length >= 1, `${exc.length} exceptions`],
+        ['Resolved-ticket lessons captured', (pb.resolved_tickets || []).length >= 1, `${(pb.resolved_tickets || []).length} lessons`],
+        ['Reviewer sign-off recorded', store.trail.length >= 1, `${store.trail.length} review actions`],
+        ['Existing runbooks refreshed (none stale / incomplete)', gapDocs.length === 0, gapDocs.length ? `${gapDocs.length} need work` : 'all current'],
+      ];
+      return `<p class="text-sm mb-2">Coverage check — does the captured documentation cover what a typical KT for these applications needs?${apps.length ? ` Applications in scope: <b>${esc(apps.slice(0, 6).join(', '))}</b>.` : ''}</p>
+        <div class="space-y-1 text-sm">${checks.map(([label, done, detail]) => `<div class="flex items-center gap-2"><span class="${done ? 'text-green-600' : 'text-amber-600'} font-bold">${done ? '✓' : '⚠'}</span><span>${esc(label)}</span><span class="text-gray-400 text-xs ml-auto">${esc(detail)}</span></div>`).join('')}</div>
+        ${gapDocs.length ? `<div class="mt-3 text-xs"><b>Documentation gaps to close before playback:</b><ul class="list-disc ml-5 mt-1">${gapDocs.slice(0, 6).map(r => `<li>${esc(r.Title || r.title || 'runbook')} — ${esc(r.Status || r.status || 'needs update')}</li>`).join('')}</ul></div>` : ''}
+        <div class="text-xs text-gray-500 mt-2">MOCK agent — coverage computed client-side from the Playbook, the review trail and your uploaded runbooks. (Previously the Scenario agent.)</div>`;
+    }
+
+    case 'reviewer': {
+      if (!pb) return awaitingBox("Nothing to review yet. Run the Playbook Composer first.");
+      const reviewed = new Set(store.trail.map(t => t.target));
+      const pending = [];
+      (pb.sops || []).forEach(s => { const k = `sop:${s.n}`; if (!reviewed.has(k)) pending.push({ kind: 'SOP', target: k, label: `SOP #${s.n} — ${s.title}`, item: s }); });
+      (pb.exception_library || []).forEach(e => { const k = `exc:${e.id}`; if (!reviewed.has(k)) pending.push({ kind: 'Exception', target: k, label: `${e.id} — ${e.trigger}`, item: e }); });
+      window.__reviewItems = Object.fromEntries([...(pb.sops || []).map(s => [`sop:${s.n}`, s]), ...(pb.exception_library || []).map(e => [`exc:${e.id}`, e])]);
+
+      const trailHtml = store.trail.length ? `<details class="mt-3 text-xs no-toggle"><summary class="cursor-pointer font-semibold">Approval trail (${store.trail.length})</summary>
+        <table class="grid w-full mt-2"><tbody>${store.trail.map(t => `<tr><td>${esc(t.ts.slice(0,16).replace('T',' '))}</td><td><b>${esc(t.action)}</b></td><td><code>${esc(t.target)}</code></td><td class="text-gray-600">${esc(t.note || '')}</td></tr>`).join('')}</tbody></table></details>` : '';
+
+      if (!pending.length) {
+        return `<p class="text-sm mb-3">All Playbook items reviewed. ${store.trail.length} actions recorded this session.</p>
+          <div class="bg-green-50 border-l-4 border-green-600 p-3 rounded-r text-sm">Playbook status: <b>APPROVED</b> for this session. Downstream agents use the reviewed Playbook.</div>${trailHtml}`;
+      }
+      return `<p class="text-sm mb-3">Reviewer Copilot is nudging you. <b>${pending.length}</b> Playbook items await your judgment.</p>
+        <div class="space-y-2 max-h-[28rem] overflow-y-auto pr-1">${pending.map(it => `
+          <div class="bg-white border rounded p-3 text-sm no-toggle">
+            <div class="text-xs text-gray-500 uppercase font-semibold mb-1">${it.kind}</div>
+            <div class="mb-2">${esc(it.label)}</div>
+            <div class="flex gap-2 text-xs">
+              <button class="rev-btn px-3 py-1 bg-green-600 text-white rounded no-toggle" data-action="approve" data-target="${esc(it.target)}">Approve</button>
+              <button class="rev-btn px-3 py-1 border rounded no-toggle" data-action="edit" data-target="${esc(it.target)}">Edit (re-prompt Claude)</button>
+              <button class="rev-btn px-3 py-1 border border-red-300 text-red-700 rounded no-toggle" data-action="reject" data-target="${esc(it.target)}">Reject</button>
+            </div>
+            <div class="rev-form hidden mt-2" data-form="${esc(it.target)}">
+              <textarea class="w-full border rounded p-2 text-xs" rows="2" placeholder="What should change, and why?"></textarea>
+              <button class="rev-submit mt-1 px-3 py-1 bg-slate-900 text-white rounded text-xs no-toggle" data-target="${esc(it.target)}">Submit</button>
+              <span class="rev-out text-xs ml-2"></span>
+            </div>
+          </div>`).join('')}</div>${trailHtml}`;
+    }
+
+    case 'coach': {
+      if (!pb) return awaitingBox("The Coach teaches from the Playbook. Run the Playbook Composer first.");
+      const scene = await runReal('/api/coach', { playbook: pb, uploadedDocs: store.coachDocs, trainee: traineeName() }, d => {
+        store.pipeline.coach = d;
+        return `<p class="text-sm mb-2">Coaching plan for <b>${esc(d.trainee || traineeName())}</b>${store.coachDocs.length ? ` — grounded in the Playbook plus ${store.coachDocs.length} uploaded doc(s)` : ' — grounded in the Playbook'}.</p>
+        <div class="grid md:grid-cols-2 gap-3 text-xs">
+          <div><b>Practice questions (${(d.questions || []).length})</b>${(d.questions || []).slice(0, 4).map(q => `<div class="bg-gray-50 p-2 mt-2 rounded"><b>${esc(q.difficulty)}:</b> ${esc(q.prompt)}<div class="text-gray-600 mt-1">key: ${esc(q.answer_key)}</div><div class="text-gray-400 mt-1">sources: ${esc((q.sources || []).join(', '))}</div></div>`).join('')}</div>
+          <div><b>Micro-lessons (${(d.micro_lessons || []).length})</b>${(d.micro_lessons || []).slice(0, 4).map(m => `<div class="bg-gray-50 p-2 mt-2 rounded"><b>${esc(m.title)}</b> (${esc(m.duration_min)} min)<div class="text-gray-600 mt-1">${esc(m.summary)}</div></div>`).join('')}</div>
+        </div>
+        ${(d.schedule || []).length ? `<details class="mt-3 text-xs no-toggle"><summary class="cursor-pointer font-semibold">Delivery schedule (${d.schedule.length})</summary><table class="grid w-full mt-2"><tbody>${d.schedule.slice(0, 12).map(s => `<tr><td>${esc(s.date)} ${esc(s.time)}</td><td>${esc(s.kind)}</td><td><code>${esc(s.item)}</code></td></tr>`).join('')}</tbody></table></details>` : ''}`;
+      });
+      return scene + `<div class="mt-3 bg-slate-50 border rounded p-3 text-xs no-toggle">
+          <div class="font-semibold mb-1">Extra documents for the Coach</div>
+          <div class="text-gray-600">Upload any <code>.txt</code>, <code>.md</code> or <code>.json</code> — the Coach regenerates its questions and lessons grounded in them.</div>
+          <input type="file" class="coach-file text-xs mt-2 no-toggle" accept=".txt,.md,.json" multiple />
+          <div class="text-gray-600 mt-1">Currently attached: ${store.coachDocs.length} doc(s)</div>
+        </div>`;
+    }
+
+    case 'copilot': {
+      if (!pb) return awaitingBox("The Copilot serves the Playbook at the point of work. Run the Playbook Composer first.");
+      const sop = (pb.sops || [])[0];
+      const exc = (pb.exception_library || [])[0];
+      return `<div class="bg-gray-50 p-3 rounded text-sm mb-3"><b>Incoming matter:</b> ${esc(pb.applicability?.[0] || pb.domain_summary || 'matches this playbook')}</div>
+        <div class="bg-teal-50 border-l-4 border-teal-700 p-4 rounded-r-md">
+          <div class="text-xs text-gray-600">Assist card · drawn from ${esc(pb.title || 'the playbook')} v${esc(pb.version || '1.0')}</div>
+          <div class="font-medium">${esc(sop?.title || '—')}</div>
+          <ol class="text-sm list-decimal ml-5 space-y-1 mt-2">${(sop?.steps || []).slice(0, 5).map(s => `<li>${esc(s)}</li>`).join('') || '<li>—</li>'}</ol>
+          ${exc ? `<div class="text-xs mt-3 bg-white border-l-4 border-amber-400 p-2">Watch for: ${esc(exc.trigger)} → ${esc(exc.response)}</div>` : ''}
+        </div><div class="text-xs text-gray-500 mt-2">MOCK agent — rendered from the Playbook, no separate generation call.</div>`;
+    }
+
+    /* ---------- Pillar 5 · Compounding Intelligence ---------- */
+    case 'automation': {
+      if (!pb) return awaitingBox("The Automation Prioritizer scores the approved Playbook. Run the Playbook Composer first.");
+      return await runReal('/api/automation', { playbook: pb, extraction: ex, corpus: corpusPayload() }, d => {
+        store.pipeline.automation = d;
+        const ps = d.portfolio_summary || {};
+        const disp = k => ({ automate: 'pill-real', agent: 'pill-live', assist: 'pill-hitl', manual: 'pill-mock' }[k] || 'pill-mock');
+        const bar = n => { const pct = Math.round((Number(n) || 0) / 5 * 100); return `<span class="inline-block align-middle w-14 h-1.5 bg-gray-200 rounded-full overflow-hidden"><span class="block h-full bg-accent" style="width:${pct}%"></span></span>`; };
+        return `<p class="text-sm mb-2">Automation &amp; agent-readiness scoring over <b>${(d.candidates || []).length}</b> captured procedures — ranked by ticket frequency × automatability × ease of build &amp; maintenance.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-3">
+            ${[['Automate', ps.automate], ['Agent', ps.agent], ['Assist', ps.assist], ['Manual', ps.manual]].map(([k, v]) => `<div class="border rounded p-2 bg-white"><div class="text-gray-500">${k}</div><div class="font-serif text-2xl">${v ?? 0}</div></div>`).join('')}
+          </div>
+          <div class="overflow-x-auto"><table class="grid text-xs w-full mb-3"><thead><tr class="text-gray-500"><th>Procedure</th><th>Freq</th><th>Auto</th><th>Build</th><th>Maint</th><th>Score</th><th>Disposition</th><th>Agent-ready</th></tr></thead><tbody>
+          ${(d.candidates || []).slice(0, 10).map(c => { const s = c.scores || {}; return `<tr>
+            <td><b>${esc(c.name)}</b><div class="text-gray-400">${esc(c.linked_to || '')}</div></td>
+            <td>${bar(s.ticket_frequency)}</td><td>${bar(s.automation_potential)}</td><td>${bar(s.ease_of_implementation)}</td><td>${bar(s.ease_of_maintenance)}</td>
+            <td class="font-semibold">${Number(c.composite || 0).toFixed(2)}</td>
+            <td><span class="pill ${disp(c.disposition)}">${esc(((c.disposition || '') + '').toUpperCase())}</span></td>
+            <td>${c.agent_ready ? '<span class="pill pill-real">READY</span>' : '<span class="text-gray-400">—</span>'}</td>
+          </tr>`; }).join('')}
+          </tbody></table></div>
+          <div class="space-y-2">${(d.candidates || []).filter(c => c.reactive_to_proactive || c.rca_remediation).slice(0, 4).map(c => `
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-2 text-xs"><b>${esc(c.name)}</b>
+              ${c.reactive_to_proactive ? `<div class="mt-1"><b>Reactive → proactive:</b> ${esc(c.reactive_to_proactive)}</div>` : ''}
+              ${c.rca_remediation ? `<div class="mt-1"><b>RCA / remediation:</b> ${esc(c.rca_remediation)}</div>` : ''}
+            </div>`).join('')}</div>
+          ${ps.top_opportunity ? `<div class="mt-3 bg-teal-50 border-l-4 border-teal-700 p-3 rounded-r text-sm"><b>Top opportunity:</b> ${esc(ps.top_opportunity)}</div>` : ''}
+          ${ps.feedback_loop ? `<div class="text-xs text-gray-600 mt-2"><b>Feedback loop:</b> ${esc(ps.feedback_loop)}</div>` : ''}`;
+      });
+    }
+
+    default: return '<div class="text-sm text-gray-500">No content.</div>';
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Reviewer actions + Jira connect (delegated)
+ * ------------------------------------------------------------------ */
+document.addEventListener('click', async e => {
+  // Jira connect
+  if (e.target.id === 'jira-connect') {
+    e.stopPropagation();
+    store.jiraStatus = 'connecting';
+    if (state.active === 'archivist') await activate('archivist', true);
+    try {
+      const r = await fetch('/api/jira', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+      const j = await r.json();
+      store.jiraLive = j;
+      store.jiraStatus = j.connected ? 'connected' : 'error';
+    } catch { store.jiraStatus = 'error'; store.jiraLive = null; }
+    // A live pull changes the corpus, so downstream must be re-run.
+    store.pipeline = { archivist:null, extraction:null, graph:null, playbook:null, coach:null, interviewPlan:null, automation:null };
+    store.results = {};
+    if (state.active === 'archivist') await activate('archivist', true);
+    renderKpis();
+    return;
+  }
+
+  // Reviewer approve / reject / open edit form
+  const b = e.target.closest('.rev-btn');
+  if (b) {
+    e.stopPropagation();
+    const action = b.dataset.action, target = b.dataset.target;
+    if (action === 'edit') {
+      const form = document.querySelector(`.rev-form[data-form="${CSS.escape(target)}"]`);
+      form?.classList.toggle('hidden');
+      return;
+    }
+    if (action === 'reject') {
+      const form = document.querySelector(`.rev-form[data-form="${CSS.escape(target)}"]`);
+      const note = form?.querySelector('textarea')?.value || '';
+      store.trail.push({ ts: new Date().toISOString(), reviewer: smeName() || 'Reviewer', action: 'reject', target, note });
+    } else {
+      store.trail.push({ ts: new Date().toISOString(), reviewer: smeName() || 'Reviewer', action: 'approve', target, note: '' });
+    }
+    if (state.active === 'reviewer') activate('reviewer', true); else renderKpis();
+    return;
+  }
+
+  // Reviewer edit → live re-prompt
+  const sub = e.target.closest('.rev-submit');
+  if (sub) {
+    e.stopPropagation();
+    const target = sub.dataset.target;
+    const form = sub.closest('.rev-form');
+    const note = form.querySelector('textarea').value.trim();
+    const out = form.querySelector('.rev-out');
+    if (!note) { out.textContent = 'Describe the change first.'; return; }
+    out.innerHTML = '<span class="spin"></span> re-prompting Claude…';
+    try {
+      const r = await fetch('/api/reprompt', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target, item: window.__reviewItems?.[target], editReason: note })
+      });
+      const j = await r.json();
+      if (j.source !== 'live') throw new Error(j.message || 'reprompt failed');
+      store.revisions[target] = j.data;
+      store.trail.push({ ts: new Date().toISOString(), reviewer: smeName() || 'Reviewer', action: 'edit', target, note });
+      if (store.pipeline.playbook) {
+        const sop = (store.pipeline.playbook.sops || []).find(s => `sop:${s.n}` === target);
+        if (sop && j.data.revised_item) { sop.title = j.data.revised_title || sop.title; sop.rationale = j.data.revised_rationale || sop.rationale; if (j.data.revised_item.steps) sop.steps = j.data.revised_item.steps; }
+      }
+      activate('reviewer', true);
+    } catch (err) {
+      out.innerHTML = `<span class="text-red-600">${esc(err.message)}</span>`;
+    }
+    return;
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * Data tab
+ * ------------------------------------------------------------------ */
+function renderDataTab() {
+  const el = $('#data-detail');
+  if (!store.sheets.length) {
+    el.innerHTML = `<div class="bg-white rounded-lg shadow-sm p-6 text-sm text-gray-600">Nothing loaded yet. Upload a workbook on the Agent Dashboard.</div>`;
+    return;
+  }
+  el.innerHTML = store.sheets.map(s => `
+    <div class="bg-white rounded-lg shadow-sm p-5 mb-4">
+      <div class="flex items-baseline justify-between flex-wrap gap-2">
+        <div><span class="font-serif text-xl">${esc(s.sheet)}</span> <span class="text-xs text-gray-500">from ${esc(s.file)}</span></div>
+        <div class="text-xs flex items-center gap-2">
+          <span class="text-gray-500">routed to</span>
+          <select class="sheet-kind border rounded px-1 py-0.5" data-sheet="${s.id}">
+            ${Object.entries(BUCKETS).map(([k, label]) => `<option value="${k}"${s.kind === k ? ' selected' : ''}>${label}</option>`).join("")}
+          </select>
+          <span class="text-gray-500">${s.rows.length.toLocaleString()} rows · ${(s.columns || []).length} columns${s.headerRow ? ` · header on row ${s.headerRow + 1}` : ''}</span>
+        </div>
+      </div>
+      ${s.truncated ? `<div class="text-xs text-amber-700 mt-1">⚠ Only the first ${MAX_ROWS_PER_SHEET.toLocaleString()} rows were kept; ${s.truncated.toLocaleString()} further rows were skipped.</div>` : ''}
+      <div class="overflow-x-auto mt-3">
+        <table class="grid text-xs w-full"><thead><tr class="text-gray-500">${(s.columns || []).slice(0, 9).map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+        <tbody>${s.rows.slice(0, 5).map(r => `<tr>${(s.columns || []).slice(0, 9).map(c => `<td>${esc(String(r[c] ?? '').slice(0, 60))}</td>`).join('')}</tr>`).join('')}</tbody></table>
+      </div>
+    </div>`).join('');
+}
+
+/* ------------------------------------------------------------------ *
+ * Boot
+ * ------------------------------------------------------------------ */
+render();
+setStatus(null);
+</script>
+</body>
+</html>
